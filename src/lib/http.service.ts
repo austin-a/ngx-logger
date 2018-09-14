@@ -10,7 +10,7 @@ export class NGXLoggerHttpService {
 
   }
 
-  logOnServer(url: string, message: string, additional: any[], metaData: HttpMetaDataInterface): Observable<any> {
+  logOnServer(url: string, message: string, additional: any[], metaData: HttpMetaDataInterface, authHeaders: HttpHeaders): Observable<any> {
     const body = {
       message: message,
       additional: additional,
@@ -21,9 +21,9 @@ export class NGXLoggerHttpService {
     };
 
     const options = {
-      headers: new HttpHeaders().set('Content-Type', 'application/json')
+      headers: new HttpHeaders().set('Authorization', authHeaders.get('Authorization'))
     };
 
-    return this.http.post(url, body, options)
+    return this.http.post(url, body, options);
   }
 }

@@ -1,5 +1,5 @@
 import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
-import {HttpErrorResponse} from '@angular/common/http';
+import {HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import {isPlatformBrowser} from '@angular/common';
 
 import {NGXLoggerHttpService} from './http.service';
@@ -25,6 +25,7 @@ export class NGXLogger {
   private readonly _isIE: boolean;
   private readonly _logFunc: Function;
   private configService: NGXLoggerConfigEngine;
+  private authToken: string;
 
   constructor(private readonly httpService: NGXLoggerHttpService, loggerConfig: LoggerConfig,
               @Inject(PLATFORM_ID) private readonly platformId) {
@@ -68,6 +69,10 @@ export class NGXLogger {
 
   public getConfigSnapshot(): LoggerConfig {
     return this.configService.getConfig();
+  }
+
+  public setAuthToken(token: string): void {
+    this.authToken = token;
   }
 
   private _logIE(level: NgxLoggerLevel, metaString: string, message: string, additional: any[]): void {
@@ -149,9 +154,11 @@ export class NGXLogger {
 
       // make sure the stack gets sent to the server
       message = message instanceof Error ? message.stack : message;
-
+      // adding authorization token to headers
+      const headers: HttpHeaders = new HttpHeaders().set('Authorization', this.authToken);
       // Allow logging on server even if client log level is off
-      this.httpService.logOnServer(config.serverLoggingUrl, message, validatedAdditionalParameters, metaData).subscribe((res: any) => {
+      this.httpService.logOnServer(config.serverLoggingUrl, message, validatedAdditionalParameters,
+        metaData, headers).subscribe((res: any) => {
           // I don't think we should do anything on success
         },
         (error: HttpErrorResponse) => {
